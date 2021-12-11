@@ -1,0 +1,21 @@
+inquirer questions
+
+schema
+    seeds
+    query?
+
+
+
+inquirer functionality
+
+stubbing -- write function name parens make skeletons
+    -- notes for what it will do 
+    -- view create ... 
+    --db.query sql queries and console.table data
+
+call the funcions in inquirer based on user answers. 
+
+
+
+
+
