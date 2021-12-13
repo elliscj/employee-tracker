@@ -1,11 +1,11 @@
 const inquirer = require("inquirer");
-const db = require("../config/connection");
+const db = require("./config/connection");
+// require("console.table");
 
 const questions = {
   mainMenu: {
     type: "list",
     message: "What would you like to do?",
-    name: "action",
     choices: [
       "View All Employees",
       "Add Employee",
@@ -16,6 +16,7 @@ const questions = {
       "Add Department",
       "Quit",
     ],
+    name: "action",
   },
   addEmployee: [
     {
@@ -75,8 +76,8 @@ const questions = {
   ],
 };
 
-function init(questions) {
-  //   console.table(questions.addEmployee);
+function init() {
+  console.table(questions.addDepartment);
   inquirer.prompt(questions.mainMenu).then((data) => {
     console.log(data);
     switch (data.action) {
@@ -110,6 +111,41 @@ function init(questions) {
 
 function quit() {
   console.log("Goodbye!");
+  console.table(questions.addEmployee);
 }
 
-init(questions);
+init();
+
+function viewEmployees() {
+  console.table(db.query(`SELECT * FROM employees`));
+}
+
+function addEmployee() {
+  console.log(questions.addEmployee);
+  inquirer.prompt(questions.addEmployee).then(function (res) {
+    var query = db.query(
+      "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?)",
+      {
+        first_name: res.firstName,
+        last_name: res.lastName,
+        role_id: res.role,
+        manager_id: res.manager,
+      },
+      function (err) {
+        if (err) throw err;
+        console.table(res);
+        console.log(typeof res.firstName);
+        console.log(typeof res.manager);
+        init();
+      }
+    );
+  });
+}
+
+function viewDepartments() {
+  db.query(`SELECT * FROM department`, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    init();
+  });
+}
