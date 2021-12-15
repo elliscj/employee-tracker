@@ -33,12 +33,12 @@ const questions = {
     },
     {
       type: "input",
-      message: "what is the employees role?",
+      message: "what is the employees role id?",
       name: "role",
     },
     {
       type: "input",
-      message: "who is the employees manager?",
+      message: "What is the id of the employees manager?",
       name: "manager",
     },
   ],
@@ -57,7 +57,6 @@ const questions = {
       type: "input",
       message: "What department does the role belong to?",
       name: "roleDepartment",
-      // db.query for all the departments and make choices list for the available
     },
   ],
   addDepartment: [
@@ -72,14 +71,11 @@ const questions = {
       type: "input",
       message: "What is the id of the employee you wish to update?",
       name: "employeeUpdateId",
-      // db.query for list of all employees
     },
     {
       type: "input",
       message: "What is id of their new role?",
       name: "employeeNewRoleId",
-
-      //db.query for list of all roles
     },
   ],
 };
@@ -88,25 +84,25 @@ function init() {
   inquirer.prompt(questions.mainMenu).then((data) => {
     switch (data.action) {
       case "View All Employees":
-        viewEmployees(init);
+        viewEmployees();
         break;
       case "Add Employee":
-        addEmployee(init);
+        addEmployee();
         break;
       case "Update Employee Role":
-        updateRole(init);
+        updateRole();
         break;
       case "View All Roles":
-        viewRoles(init);
+        viewRoles();
         break;
       case "Add Role":
-        addRole(init);
+        addRole();
         break;
       case "View All Departments":
-        viewDepartments(init);
+        viewDepartments();
         break;
       case "Add Department":
-        addDepartment(init);
+        addDepartment();
         break;
       case "Quit":
         quit();
