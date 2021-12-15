@@ -1,6 +1,8 @@
 const inquirer = require("inquirer");
 const db = require("./config/connection");
+
 // require("console.table");
+// In my opinion the built in console.table looks better than this npm version. I have installed it however and the app runs just fine with either.
 
 const questions = {
   mainMenu: {
@@ -58,49 +60,53 @@ const questions = {
       // db.query for all the departments and make choices list for the available
     },
   ],
+  addDepartment: [
+    {
+      type: "input",
+      message: "What Departement Would You Like to Add?",
+      name: "addDepartment",
+    },
+  ],
   updateEmployee: [
     {
-      type: "list",
-      message: "Which employee would you like to update?",
-      name: "employeeUpdate",
-      choices: "",
+      type: "input",
+      message: "What is the id of the employee you wish to update?",
+      name: "employeeUpdateId",
       // db.query for list of all employees
     },
     {
-      type: "list",
-      message: "What is their new role?",
-      name: "employeeNewRole",
-      choices: "",
+      type: "input",
+      message: "What is id of their new role?",
+      name: "employeeNewRoleId",
+
       //db.query for list of all roles
     },
   ],
 };
 
 function init() {
-  console.table(questions.addDepartment);
   inquirer.prompt(questions.mainMenu).then((data) => {
-    console.log(data);
     switch (data.action) {
       case "View All Employees":
-        viewEmployees();
+        viewEmployees(init);
         break;
       case "Add Employee":
-        addEmployee();
+        addEmployee(init);
         break;
       case "Update Employee Role":
-        updateRole();
+        updateRole(init);
         break;
       case "View All Roles":
-        viewRoles();
+        viewRoles(init);
         break;
       case "Add Role":
-        addRole();
+        addRole(init);
         break;
       case "View All Departments":
-        viewDepartments();
+        viewDepartments(init);
         break;
       case "Add Department":
-        addDepartment();
+        addDepartment(init);
         break;
       case "Quit":
         quit();
@@ -110,42 +116,133 @@ function init() {
 }
 
 function quit() {
+  console.clear();
   console.log("Goodbye!");
-  console.table(questions.addEmployee);
+  process.exit();
 }
 
-init();
-
 function viewEmployees() {
-  console.table(db.query(`SELECT * FROM employees`));
+  console.clear();
+  db.query(
+    `SELECT employees.id, employees.first_name, employees.last_name, role.title, department.name AS Department, role.salary AS Salary, 
+
+    CONCAT(m.first_name, " ", m.last_name) AS Manager
+
+    FROM employees
+
+    LEFT JOIN role
+    ON employees.role_id = role.id
+
+    LEFT JOIN department
+    ON department.id = role.department_id
+
+    LEFT JOIN employees m
+    ON m.id = employees.manager_id`,
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      init();
+    }
+  );
 }
 
 function addEmployee() {
-  console.log(questions.addEmployee);
+  console.clear();
   inquirer.prompt(questions.addEmployee).then(function (res) {
-    var query = db.query(
-      "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?)",
-      {
-        first_name: res.firstName,
-        last_name: res.lastName,
-        role_id: res.role,
-        manager_id: res.manager,
-      },
-      function (err) {
-        if (err) throw err;
-        console.table(res);
-        console.log(typeof res.firstName);
-        console.log(typeof res.manager);
-        init();
-      }
-    );
+    const sql = "INSERT INTO employees SET ?";
+    const params = {
+      first_name: res.firstName,
+      last_name: res.lastName,
+      role_id: res.role,
+      manager_id: res.manager,
+    };
+    db.query(sql, params, function (err) {
+      if (err) throw err;
+      console.table(res);
+      // console.log(typeof res.firstName);
+      // console.log(typeof res.manager);
+      init();
+    });
   });
 }
 
 function viewDepartments() {
+  console.clear();
   db.query(`SELECT * FROM department`, (err, res) => {
     if (err) throw err;
     console.table(res);
     init();
   });
 }
+
+function addDepartment() {
+  console.clear();
+  inquirer.prompt(questions.addDepartment).then(function (res) {
+    const sql = `INSERT INTO department SET ?`;
+    const params = { name: res.addDepartment };
+    db.query(sql, params, function (err) {
+      if (err) throw err;
+      console.table(res);
+      init();
+    });
+  });
+}
+
+function viewRoles() {
+  console.clear();
+  db.query(
+    `SELECT 
+  role.id, 
+  role.title, 
+  department.name AS departments, 
+  role.salary FROM role 
+  LEFT JOIN department 
+  on role.department_id = department.id`,
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      init();
+    }
+  );
+}
+
+function addRole() {
+  console.clear();
+  inquirer.prompt(questions.addRole).then(function (res) {
+    const sql = "INSERT INTO role SET ?";
+    const params = {
+      title: res.roleName,
+      salary: res.roleSalary,
+      department_id: res.roleDepartment,
+    };
+    db.query(sql, params, function (err) {
+      if (err) throw err;
+
+      console.table(res);
+      init();
+    });
+  });
+}
+
+function updateRole() {
+  console.clear();
+  db.query(`SELECT * FROM employees`, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    db.query(`SELECT * FROM role`, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      inquirer.prompt(questions.updateEmployee).then(function (res) {
+        const sql = `UPDATE employees SET role_id = ? WHERE id = ?`;
+        const params = [res.employeeNewRoleId, res.employeeUpdateId];
+        db.query(sql, params, function (err) {
+          if (err) throw err;
+          console.table(res);
+          init();
+        });
+      });
+    });
+  });
+}
+
+init();
